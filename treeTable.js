@@ -855,7 +855,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
      * @returns {string}
      */
     TreeTable.prototype.renderBodyTd = function (d, indent, index, $td, col) {
-        if (col.colGroup) return '';
+        if (!col||col.colGroup) return '';
         var options = this.options;
         var components = this.getComponents();
         if (!indent) indent = 0;
@@ -1158,15 +1158,15 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
     /** 根据id获取tr的index */
     TreeTable.prototype.getIndexById = function (id) {
         var options = this.options;
-
         function each(data, pi) {
             for (var i = 0; i < data.length; i++) {
-                if (data[i][options.tree.idName] == id) return pi !== undefined ? pi + '-' + i : i;
-                if (data[i][options.tree.childName])
-                    return each(data[i][options.tree.childName], pi !== undefined ? pi + '-' + i : i);
+                if (data[i][options.tree.idName] === id) return pi !== undefined ? pi + '-' + i : i;
+                if (data[i][options.tree.childName]){
+                   var res = each(data[i][options.tree.childName], pi !== undefined ? pi + '-' + i : i);
+                   if(res) return res;
+                }
             }
         }
-
         return each(options.data);
     };
 
