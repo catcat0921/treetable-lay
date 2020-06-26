@@ -793,20 +793,22 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
      * @param data 数据列表
      * @param indent 缩进大小
      * @param parent 父级
+     * @param h 父级是否隐藏
      * @returns {string}
      */
-    TreeTable.prototype.renderBody = function (data, indent, parent) {
+    TreeTable.prototype.renderBody = function (data, indent, parent,h) {
         var options = this.options;
         if (!indent) indent = 0;
         var html = '';
         if (!data || data.length === 0) return html;
         var hide = parent ? !parent[options.tree.openName] : undefined;
+        if(h) hide = h;//当所有父级存在隐藏时，隐藏所有子集
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
             d.LAY_INDEX = (parent ? parent.LAY_INDEX + '-' : '') + i;
             html += this.renderBodyTr(d, indent, hide);
             // 递归渲染子集
-            html += this.renderBody(d[options.tree.childName], indent + 1, d);
+            html += this.renderBody(d[options.tree.childName], indent + 1, d,h);
         }
         return html;
     };
