@@ -1561,7 +1561,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             d = this.getDataByTr($tr);
         }
         if (data) {  // 数据模式
-            if (this.data.length > 0) components.$loading.addClass('ew-loading-float');
+            if (data.length > 0) components.$loading.addClass('ew-loading-float');
             components.$loading.show();
             if (data.length > 0 && this.options.tree.isPidData) {  // pid形式数据
                 this.renderBodyData(tt.pidToChildren(data, this.options.tree.idName, this.options.tree.pidName, this.options.tree.childName), d, $tr);
