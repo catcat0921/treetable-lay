@@ -796,19 +796,19 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
      * @param h 父级是否隐藏
      * @returns {string}
      */
-    TreeTable.prototype.renderBody = function (data, indent, parent,h) {
+    TreeTable.prototype.renderBody = function (data, indent, parent, h) {
         var options = this.options;
         if (!indent) indent = 0;
         var html = '';
         if (!data || data.length === 0) return html;
         var hide = parent ? !parent[options.tree.openName] : undefined;
-        if(h) hide = h;//当所有父级存在隐藏时，隐藏所有子集
+        if (h) hide = h;//当所有父级存在隐藏时，隐藏所有子集
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
             d.LAY_INDEX = (parent ? parent.LAY_INDEX + '-' : '') + i;
             html += this.renderBodyTr(d, indent, hide);
             // 递归渲染子集
-            html += this.renderBody(d[options.tree.childName], indent + 1, d,h);
+            html += this.renderBody(d[options.tree.childName], indent + 1, d, h);
         }
         return html;
     };
@@ -860,7 +860,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
      * @returns {string}
      */
     TreeTable.prototype.renderBodyTd = function (d, indent, index, $td, col) {
-        if (col.colGroup) return '';
+        if (!col||col.colGroup) return '';
         var options = this.options;
         var components = this.getComponents();
         if (!indent) indent = 0;
@@ -1166,9 +1166,12 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
 
         function each(data, pi) {
             for (var i = 0; i < data.length; i++) {
-                if (data[i][options.tree.idName] == id) return pi !== undefined ? pi + '-' + i : i;
-                if (data[i][options.tree.childName])
-                    return each(data[i][options.tree.childName], pi !== undefined ? pi + '-' + i : i);
+                if (data[i][options.tree.idName] === id) return pi !== undefined ? pi + '-' + i : i;
+                if (data[i][options.tree.childName]) {
+                    var res = each(data[i][options.tree.childName], pi !== undefined ? pi + '-' + i : i);
+                    //值不为undefined才return
+                    if (res) return res;
+                }
             }
         }
 
