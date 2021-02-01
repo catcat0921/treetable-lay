@@ -1,4 +1,4 @@
-/** 树形表格3.x Created by wangfan on 2020-04-06 https://gitee.com/whvse/treetable-lay */
+/** 树形表格3.x Created by wangfan on 2020-05-12 https://gitee.com/whvse/treetable-lay */
 
 layui.define(['laytpl', 'form', 'util'], function (exports) {
     var $ = layui.jquery;
@@ -21,7 +21,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
         parseData: undefined,                            // url模式处理请求数据
         request: {pidName: 'pid'},                       // url模式请求字段自定义
         toolbar: undefined,                              // 表头工具栏
-        defaultToolbar: ['filter', 'exports', 'print'],  // 表头工具栏右侧按钮
+        defaultToolbar: undefined,                       // 表头工具栏右侧按钮
         width: undefined,                                // 容器宽度
         height: undefined,                               // 容器高度
         cellMinWidth: 90,                                // 单元格最小宽度
@@ -231,6 +231,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
                 '</div>'
             ].join('');
         }
+        if (this.options.defaultToolbar === undefined) this.options.defaultToolbar = ['filter', 'exports', 'print'];
 
         // 自定义图标参数处理
         if (typeof this.options.tree.getIcon === 'string') {
@@ -289,7 +290,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             components.$toolbar.show();
             if (typeof options.toolbar === 'string') {
                 laytpl($(options.toolbar).html()).render({}, function (html) {
-                    components.$toolbar.html(html);
+                    components.$toolbar.html('<div style="display: inline-block;">' + html + '</div>');
                 });
             }
             var tbRights = ['<div class="ew-tree-table-tool-right">'];
@@ -304,10 +305,12 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
                 } else {
                     tbItem = options.defaultToolbar[i];
                 }
-                tbRights.push('<div class="ew-tree-table-tool-item"');
-                tbRights.push(' title="' + tbItem.title + '"');
-                tbRights.push(' lay-event="' + tbItem.layEvent + '">');
-                tbRights.push('<i class="layui-icon ' + tbItem.icon + '"></i></div>');
+                if (tbItem) {
+                    tbRights.push('<div class="ew-tree-table-tool-item"');
+                    tbRights.push(' title="' + tbItem.title + '"');
+                    tbRights.push(' lay-event="' + tbItem.layEvent + '">');
+                    tbRights.push('<i class="layui-icon ' + tbItem.icon + '"></i></div>');
+                }
             }
             components.$toolbar.append(tbRights.join('') + '</div>');
         }
@@ -815,20 +818,22 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
      * @param data 数据列表
      * @param indent 缩进大小
      * @param parent 父级
+     * @param h 父级是否隐藏
      * @returns {string}
      */
-    TreeTable.prototype.renderBody = function (data, indent, parent) {
+    TreeTable.prototype.renderBody = function (data, indent, parent, h) {
         var options = this.options;
         if (!indent) indent = 0;
         var html = '';
         if (!data || data.length === 0) return html;
         var hide = parent ? !parent[options.tree.openName] : undefined;
+        if (h) hide = h;//当所有父级存在隐藏时，隐藏所有子集
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
             d.LAY_INDEX = (parent ? parent.LAY_INDEX + '-' : '') + i;
             html += this.renderBodyTr(d, indent, hide);
             // 递归渲染子集
-            html += this.renderBody(d[options.tree.childName], indent + 1, d);
+            html += this.renderBody(d[options.tree.childName], indent + 1, d, h);
         }
         return html;
     };
@@ -920,7 +925,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
                 });
             }
         } else if (col.field && d[col.field] !== undefined && d[col.field] !== null) {  // 普通字段
-            content = util.escape(d[col.field] || '');
+            content = util.escape(d[col.field] === 0 ? '0' : d[col.field]);
         }
         // 图标列处理
         if (index === options.tree.iconIndex) {
@@ -1185,15 +1190,18 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
     /** 根据id获取tr的index */
     TreeTable.prototype.getIndexById = function (id) {
         var options = this.options;
+
         function each(data, pi) {
             for (var i = 0; i < data.length; i++) {
                 if (data[i][options.tree.idName] === id) return pi !== undefined ? pi + '-' + i : i;
-                if (data[i][options.tree.childName]){
+                if (data[i][options.tree.childName]) {
                     var res = each(data[i][options.tree.childName], pi !== undefined ? pi + '-' + i : i);
-                    if(res) return res;
+                    //值不为undefined才return
+                    if (res) return res;
                 }
             }
         }
+
         return each(options.data);
     };
 
@@ -1545,13 +1553,13 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             });
         }
         // 最后再检查一遍
-        $trList.not('.ew-tree-table-filter-hide').not('.ew-tree-tb-hide').each(function () {
+        /*$trList.not('.ew-tree-table-filter-hide').not('.ew-tree-tb-hide').each(function () {
             var index = $(this).data('index'), hide = true;
             for (var k = 0; k < indexList.length; k++) {
                 if (indexList[k] === index) hide = false;
             }
             if (hide) $(this).addClass('ew-tree-table-filter-hide');
-        });
+        });*/
         components.$loading.hide();
         components.$loading.removeClass('ew-loading-float');
         if (indexList.length === 0) components.$empty.show();
@@ -1583,7 +1591,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             d = this.getDataByTr($tr);
         }
         if (data) {  // 数据模式
-            if (this.data.length > 0) components.$loading.addClass('ew-loading-float');
+            if (data.length > 0) components.$loading.addClass('ew-loading-float');
             components.$loading.show();
             if (data.length > 0 && this.options.tree.isPidData) {  // pid形式数据
                 this.renderBodyData(tt.pidToChildren(data, this.options.tree.idName, this.options.tree.pidName, this.options.tree.childName), d, $tr);
@@ -1744,9 +1752,9 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
     function getPids(data, idName, pidName) {
         var pids = [];
         for (var i = 0; i < data.length; i++) {
-            var hasPid;
+            var hasPid = false;
             for (var j = 0; j < data.length; j++) {
-                if (i !== j && data[j][idName] == data[i][pidName]) {
+                if (data[i][pidName] == data[j][idName]) {
                     hasPid = true;
                     break;
                 }
