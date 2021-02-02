@@ -41,13 +41,17 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             pidName: 'pid',                              // pid的字段名
             childName: 'children',                       // children的字段名
             haveChildName: 'haveChild',                  // 是否有children标识的字段名
+            haveChildReverse: false,                     // 是否将children标识的字段取反
             openName: 'open',                            // 是否默认展开的字段名
             iconIndex: 0,                                // 图标列的索引
             arrowType: undefined,                        // 折叠箭头类型
             onlyIconControl: undefined,                  // 仅点击图标控制展开折叠
             getIcon: function (d) {                      // 自定义图标
                 var haveChild = d[this.haveChildName];
-                if (haveChild !== undefined) haveChild = haveChild === true || haveChild === 'true';
+                if (haveChild !== undefined) {
+                    haveChild = haveChild === true || haveChild === 'true';
+                    if (this.haveChildReverse) haveChild = !haveChild;
+                }
                 else if (d[this.childName]) haveChild = d[this.childName].length > 0;
                 if (haveChild) return '<i class="ew-tree-icon layui-icon layui-icon-layer"></i>';
                 else return '<i class="ew-tree-icon layui-icon layui-icon-file"></i>';
@@ -79,6 +83,24 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
         _instances[options.elem.substring(1)] = this;
         this.reload(options);
     };
+
+    /**
+     * 根据ID查找数据
+     * @param id 数据条目的ID
+     */
+    TreeTable.prototype.findDataById = function (id) {
+        var options = this.options;
+        function each(data) {
+            for (var i = 0; i < data.length; i++) {
+                if (data[i][options.tree.idName] === id) return data[i];
+                if (data[i][options.tree.childName]) {
+                    var res = each(data[i][options.tree.childName]);
+                    if (res) return res;
+                }
+            }
+        }
+        return each(options.data);
+    }
 
     /** 参数设置 */
     TreeTable.prototype.initOptions = function (opt) {
@@ -217,7 +239,10 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             this.options.tree.getIcon = function (d) {
                 if (icon !== 'ew-tree-icon-style2') return icon;
                 var haveChild = d[this.haveChildName];
-                if (haveChild !== undefined) haveChild = haveChild === true || haveChild === 'true';
+                if (haveChild !== undefined) {
+                    haveChild = haveChild === true || haveChild === 'true';
+                    if (this.haveChildReverse) haveChild = !haveChild;
+                }
                 else if (d[this.childName]) haveChild = d[this.childName].length > 0;
                 if (haveChild) return '<i class="ew-tree-icon ew-tree-icon-folder"></i>';
                 else return '<i class="ew-tree-icon ew-tree-icon-file"></i>';
@@ -765,7 +790,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             if (msg) {  // 加载失败
                 $tr.removeClass('ew-tree-table-open');
             } else if (data && data.length === 0) {  // 无子集
-                d[options.tree.haveChildName] = false;
+                d[options.tree.haveChildName] = !!options.tree.haveChildReverse;
                 $tr.data('have-child', false);
                 $arrow.addClass('ew-tree-table-arrow-hide');
                 $arrow.next('.ew-tree-icon').after(options.tree.getIcon(d)).remove();
@@ -826,6 +851,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
         var options = this.options;
         if (!indent) indent = 0;
         var haveChild = d[options.tree.haveChildName];
+        if (options.tree.haveChildReverse) haveChild = !haveChild;
         if (haveChild === undefined) haveChild = d[options.tree.childName] && d[options.tree.childName].length > 0;
         if ($tr) {
             $tr.data('have-child', haveChild ? 'true' : 'false');
@@ -908,6 +934,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             icon += '<span class="ew-tree-pack">';
             // 加箭头
             var haveChild = d[options.tree.haveChildName];
+            if (options.tree.haveChildReverse) haveChild = !haveChild;
             if (haveChild === undefined) haveChild = d[options.tree.childName] && d[options.tree.childName].length > 0;
             icon += ('<i class="ew-tree-table-arrow layui-icon' + (haveChild ? '' : ' ew-tree-table-arrow-hide'));
             icon += (' ' + (options.tree.arrowType || '') + '"></i>');
