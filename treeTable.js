@@ -31,6 +31,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
         skin: undefined,                                 // 表格风格
         even: undefined,                                 // 是否开启隔行变色
         size: undefined,                                 // 表格尺寸
+        statusCode: 0,                                   // 数据返回值代码
         text: {
             none: '无数据'                               // 空数据提示
         },
@@ -203,7 +204,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
                     contentType: that.options.contentType,
                     success: function (res) {
                         if (that.options.parseData) res = that.options.parseData(res);
-                        if (res.code == 0) callback(res.data);
+                        if (res.code == that.options.statusCode) callback(res.data);
                         else callback(res.msg || '加载失败');
                     },
                     error: function (xhr) {
