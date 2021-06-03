@@ -756,12 +756,12 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
         if (d === undefined) options.data = data;
         else d[options.tree.childName] = data;
         var indent;
-        if ($tr) {
+        if (d && $tr) {
             indent = parseInt($tr.data('indent')) + 1;
             d[options.tree.openName] = true;
         }
         var htmlStr = this.renderBody(data, indent, d);
-        if ($tr) {
+        if (d && $tr) {
             // 移除旧dom
             $tr.nextAll('tr').each(function () {
                 if (parseInt($(this).data('indent')) <= (indent - 1)) return false;
@@ -774,7 +774,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
         }
         form.render(null, components.filter);  // 渲染表单元素
         this.renderNumberCol();  // 渲染序号列
-        if ($tr) {
+        if (d && $tr) {
             // 更新父级复选框状态
             this.checkParentCB($tr);
             $tr.prevAll('tr').each(function () {
