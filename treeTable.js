@@ -937,7 +937,7 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
             var haveChild = d[options.tree.haveChildName];
             if (options.tree.haveChildReverse) haveChild = !haveChild;
             if (haveChild === undefined) haveChild = d[options.tree.childName] && d[options.tree.childName].length > 0;
-            icon += ('<i class="ew-tree-table-arrow layui-icon' + (haveChild ? '' : ' ew-tree-table-arrow-hide'));
+            icon += ('<i class="ew-tree-table-arrow layui-icon' + (haveChild === true || haveChild === 'true' ? '' : ' ew-tree-table-arrow-hide'));
             icon += (' ' + (options.tree.arrowType || '') + '"></i>');
             // 加图标
             icon += options.tree.getIcon(d);
